@@ -1,0 +1,62 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8" />
+  <title>WebAR con Three.js</title>
+
+  <!-- MindAR (OBLIGATORIO) -->
+  <script src="https://cdn.jsdelivr.net/npm/mind-ar@1.2.5/dist/mindar-image-three.prod.js"></script>
+
+  <style>
+    body {
+      margin: 0;
+      overflow: hidden;
+      background: black;
+    }
+  </style>
+</head>
+
+<body>
+<script type="module">
+  import * as THREE from 'https://cdn.jsdelivr.net/npm/three@0.152/build/three.module.js';
+  import { GLTFLoader } from 'https://cdn.jsdelivr.net/npm/three@0.152/examples/jsm/loaders/GLTFLoader.js';
+
+  // 1️⃣ Inicializar MindAR
+  const mindarThree = new window.MINDAR.IMAGE.MindARThree({
+    container: document.body,
+    imageTargetSrc: 'targets.mind'
+  });
+
+  const { renderer, scene, camera } = mindarThree;
+
+  // 2️⃣ Luz básica
+  const light = new THREE.HemisphereLight(0xffffff, 0xbbbbff, 1);
+  scene.add(light);
+
+  // 3️⃣ Anchor (imagen 0 del targets.mind)
+  const anchor = mindarThree.addAnchor(0);
+
+  // 4️⃣ Cargar modelo GLB
+  const loader = new GLTFLoader();
+  loader.load(
+    'model.glb',
+    (gltf) => {
+      gltf.scene.scale.set(0.3, 0.3, 0.3);
+      gltf.scene.position.y = 0.0;
+      anchor.group.add(gltf.scene);
+    },
+    undefined,
+    (error) => {
+      console.error('❌ Error cargando model.glb', error);
+    }
+  );
+
+  // 5️⃣ Iniciar AR (CLAVE: dentro de async)
+  await mindarThree.start();
+
+  renderer.setAnimationLoop(() => {
+    renderer.render(scene, camera);
+  });
+</script>
+</body>
+</html>
