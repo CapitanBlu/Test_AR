@@ -1,93 +1,49 @@
 <!DOCTYPE html>
 <html lang="es">
 <head>
-  <meta charset="UTF-8" />
-  <title>AR con Target + Modelo</title>
+<meta charset="UTF-8">
+<title>MindAR TEST</title>
 
-  <!-- THREE -->
-  <script src="https://cdn.jsdelivr.net/npm/three@0.152.2/build/three.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/three@0.152.2/build/three.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/mind-ar@1.2.5/dist/mindar-image-three.prod.js"></script>
 
-  <!-- GLTF LOADER (NO MODULE) -->
-  <script src="https://cdn.jsdelivr.net/npm/three@0.152.2/examples/js/loaders/GLTFLoader.js"></script>
-
-  <!-- MINDAR -->
-  <script src="https://cdn.jsdelivr.net/npm/mind-ar@1.2.5/dist/mindar-image-three.prod.js"></script>
-
-  <style>
-    body {
-      margin: 0;
-      overflow: hidden;
-      background: black;
-    }
-
-    #startButton {
-      position: fixed;
-      inset: 0;
-      background: black;
-      color: white;
-      font-size: 22px;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      z-index: 10;
-      cursor: pointer;
-      text-align: center;
-    }
-  </style>
+<style>
+body { margin:0; overflow:hidden; background:black; }
+#btn {
+  position:fixed; inset:0;
+  background:black; color:white;
+  display:flex; align-items:center; justify-content:center;
+  font-size:22px; z-index:10;
+}
+</style>
 </head>
 
 <body>
 
-<div id="startButton">
-  TOCAR PARA INICIAR AR
-</div>
+<div id="btn">TOCAR PARA INICIAR</div>
 
 <script>
-  const startButton = document.getElementById("startButton");
+const btn = document.getElementById("btn");
 
-  startButton.addEventListener("click", async () => {
-    startButton.style.display = "none";
+btn.onclick = async () => {
+  btn.style.display = "none";
 
-    // INIT MINDAR
-    const mindarThree = new MINDAR.IMAGE.MindARThree({
-      container: document.body,
-      imageTargetSrc: "./targets.mind",
-    });
-
-    const { renderer, scene, camera } = mindarThree;
-
-    // LUZ
-    const light = new THREE.HemisphereLight(0xffffff, 0xbbbbff, 1);
-    scene.add(light);
-
-    // TARGET 0
-    const anchor = mindarThree.addAnchor(0);
-
-    // CARGAR MODELO
-    const loader = new THREE.GLTFLoader();
-    loader.load(
-      "./model.glb",
-      (gltf) => {
-        const model = gltf.scene;
-
-        model.scale.set(0.3, 0.3, 0.3);
-        model.position.y = 0;
-
-        anchor.group.add(model);
-      },
-      undefined,
-      (error) => {
-        console.error("Error cargando el modelo:", error);
-      }
-    );
-
-    // 🔥 PEDIR CÁMARA (POST TAP)
-    await mindarThree.start();
-
-    renderer.setAnimationLoop(() => {
-      renderer.render(scene, camera);
-    });
+  const mindarThree = new MINDAR.IMAGE.MindARThree({
+    container: document.body,
+    imageTargetSrc: "./targets.mind",
   });
+
+  const { renderer, scene, camera } = mindarThree;
+
+  scene.add(new THREE.HemisphereLight(0xffffff, 0x444444, 1));
+
+  // ⬇️ ESTA LÍNEA DEBE DISPARAR EL PERMISO
+  await mindarThree.start();
+
+  renderer.setAnimationLoop(() => {
+    renderer.render(scene, camera);
+  });
+};
 </script>
 
 </body>
