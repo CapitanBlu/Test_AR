@@ -1,18 +1,109 @@
 <!DOCTYPE html>
 <html lang="es">
-<body style="background:black;color:white">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>WebXR AR</title>
 
-<button id="b" style="font-size:30px">PEDIR CAMARA</button>
+<style>
+body {
+  margin: 0;
+  overflow: hidden;
+  background: black;
+}
+
+#btn-ar {
+  position: fixed;
+  bottom: 30px;
+  left: 50%;
+  transform: translateX(-50%);
+  padding: 14px 20px;
+  font-size: 16px;
+  z-index: 10;
+}
+</style>
+</head>
+
+<body>
+
+<button id="btn-ar">INICIAR AR</button>
+
+<script src="https://cdn.jsdelivr.net/npm/three@0.152.2/build/three.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/three@0.152.2/examples/js/loaders/GLTFLoader.js"></script>
 
 <script>
-document.getElementById("b").onclick = async () => {
-  console.log("click");
-  const stream = await navigator.mediaDevices.getUserMedia({ video: true });
-  alert("CAMARA OK");
+let scene, camera, renderer;
+let model;
+
+const btn = document.getElementById("btn-ar");
+
+btn.onclick = async () => {
+
+  if (!navigator.xr) {
+    alert("WebXR no disponible");
+    return;
+  }
+
+  const supported = await navigator.xr.isSessionSupported("immersive-ar");
+  if (!supported) {
+    alert("AR no soportado en este dispositivo");
+    return;
+  }
+
+  btn.style.display = "none";
+  startAR();
 };
+
+function startAR() {
+
+  scene = new THREE.Scene();
+
+  camera = new THREE.PerspectiveCamera();
+
+  renderer = new THREE.WebGLRenderer({
+    alpha: true,
+    antialias: true
+  });
+
+  renderer.setSize(window.innerWidth, window.innerHeight);
+  renderer.xr.enabled = true;
+  document.body.appendChild(renderer.domElement);
+
+  // === LUZ ===
+  const light = new THREE.HemisphereLight(0xffffff, 0xbbbbff, 1);
+  scene.add(light);
+
+  // === MODELO ===
+  const loader = new THREE.GLTFLoader();
+  loader.load(
+    "model.glb",
+    (gltf) => {
+      model = gltf.scene;
+      model.scale.set(0.3, 0.3, 0.3);
+      model.position.set(0, 0, -1);
+      scene.add(model);
+    },
+    undefined,
+    (e) => console.error(e)
+  );
+
+  // === SESIÓN AR ===
+  renderer.xr.setSession(
+    navigator.xr.requestSession("immersive-ar", {
+      requiredFeatures: ["local-floor"]
+    })
+  );
+
+  renderer.setAnimationLoop(render);
+}
+
+function render() {
+  if (model) {
+    model.rotation.y += 0.01;
+  }
+  renderer.render(scene, camera);
+}
 </script>
 
 </body>
 </html>
-
-
