@@ -1,11 +1,16 @@
 <!DOCTYPE html>
 <html lang="es">
 <head>
-  <meta charset="UTF-8" />
-  <title>WebAR Three.js</title>
+  <meta charset="utf-8">
+  <title>WebAR FUNCIONANDO</title>
 
   <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
 
+  <!-- Three.js GLOBAL -->
+  <script src="https://unpkg.com/three@0.152.2/build/three.min.js"></script>
+  <script src="https://unpkg.com/three@0.152.2/examples/js/loaders/GLTFLoader.js"></script>
+
+  <!-- MindAR -->
   <script src="https://cdn.jsdelivr.net/npm/mind-ar@1.2.5/dist/mindar-image-three.prod.js"></script>
 
   <style>
@@ -36,29 +41,26 @@
 
 <div id="start">TOCAR PARA INICIAR AR</div>
 
-<script type="module">
-  import * as THREE from "https://cdn.jsdelivr.net/npm/three@0.152/build/three.module.js";
-  import { GLTFLoader } from "https://cdn.jsdelivr.net/npm/three@0.152/examples/jsm/loaders/GLTFLoader.js";
+<script>
+  const startButton = document.getElementById("start");
 
-  const start = document.getElementById("start");
+  startButton.addEventListener("click", async () => {
 
-  start.addEventListener("click", async () => {
+    startButton.style.display = "none";
 
-    start.style.display = "none";
-
-    // 🔴 TARGET ES OBLIGATORIO PARA QUE LA CÁMARA ARRANQUE
-    const mindarThree = new window.MINDAR.IMAGE.MindARThree({
+    const mindarThree = new MINDAR.IMAGE.MindARThree({
       container: document.body,
-      imageTargetSrc: "targets.mind", // aunque no lo usemos
+      imageTargetSrc: "targets.mind"
     });
 
     const { renderer, scene, camera } = mindarThree;
 
     // Luces
-    scene.add(new THREE.HemisphereLight(0xffffff, 0x444444, 1.2));
+    const light = new THREE.HemisphereLight(0xffffff, 0x444444, 1.2);
+    scene.add(light);
 
-    // Modelo SIEMPRE visible (NO anchor)
-    const loader = new GLTFLoader();
+    // Modelo SIEMPRE visible
+    const loader = new THREE.GLTFLoader();
     loader.load("model.glb", (gltf) => {
       const model = gltf.scene;
       model.scale.set(0.3, 0.3, 0.3);
@@ -66,7 +68,7 @@
       scene.add(model);
     });
 
-    // 🔥 Esto ES lo que pide la cámara
+    // 🔥 AQUÍ Chrome pide la cámara
     await mindarThree.start();
 
     renderer.setAnimationLoop(() => {
@@ -77,6 +79,7 @@
 
 </body>
 </html>
+
 
 
 
