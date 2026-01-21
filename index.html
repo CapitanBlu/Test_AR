@@ -2,67 +2,145 @@
 <html lang="es">
 <head>
 <meta charset="utf-8">
-<title>AR Test</title>
+<title>WebXR AR</title>
 <meta name="viewport" content="width=device-width, initial-scale=1">
 
 <script src="https://unpkg.com/three@0.152.2/build/three.min.js"></script>
 <script src="https://unpkg.com/three@0.152.2/examples/js/loaders/GLTFLoader.js"></script>
+
+<style>
+body { margin:0; overflow:hidden; }
+#startAR {
+  position:absolute;
+  z-index:10;
+  left:10px;
+  top:10px;
+  padding:10px;
+}
+</style>
 </head>
 
-<body style="margin:0; overflow:hidden; background:black;">
-<button id="startAR" style="position:absolute;z-index:10;padding:12px;">
-INICIAR AR
-</button>
+<body>
+
+<button id="startAR">INICIAR AR</button>
 
 <script>
 let scene, camera, renderer;
+let reticle, model;
+let hitTestSource = null;
+let hitTestSourceRequested = false;
 
-document.getElementById("startAR").onclick = startAR;
+document.getElementById("startAR").addEventListener("click", startAR);
 
 async function startAR() {
+
   document.getElementById("startAR").style.display = "none";
 
+  // ESCENA
   scene = new THREE.Scene();
+
   camera = new THREE.PerspectiveCamera();
 
-  renderer = new THREE.WebGLRenderer({ alpha:true, antialias:true });
+  renderer = new THREE.WebGLRenderer({
+    alpha: true,
+    antialias: true
+  });
+
   renderer.setSize(window.innerWidth, window.innerHeight);
   renderer.xr.enabled = true;
   document.body.appendChild(renderer.domElement);
 
-  scene.add(new THREE.HemisphereLight(0xffffff, 0xbbbbff, 1.5));
+  // LUZ
+  const light = new THREE.HemisphereLight(0xffffff, 0xbbbbff, 1);
+  scene.add(light);
 
-  const session = await navigator.xr.requestSession("immersive-ar");
-  await renderer.xr.setSession(session);
+  // SESIÓN AR
+  const session = await navigator.xr.requestSession("immersive-ar", {
+    requiredFeatures: ["hit-test"]
+  });
 
+  renderer.xr.setSession(session);
+
+  // RETICLE (indicador verde)
+  reticle = new THREE.Mesh(
+    new THREE.RingGeometry(0.06, 0.08, 32),
+    new THREE.MeshBasicMaterial({ color: 0x00ff00 })
+  );
+  reticle.rotation.x = -Math.PI / 2;
+  reticle.matrixAutoUpdate = false;
+  reticle.visible = false;
+  scene.add(reticle);
+
+  // CARGAR MODELO
   const loader = new THREE.GLTFLoader();
-  console.log("Intentando cargar model.glb");
-
   loader.load(
     "model.glb",
     (gltf) => {
-      const model = gltf.scene;
+      model = gltf.scene;
 
-      // FORZADO TOTAL
-      model.position.set(0, -0.2, -0.5);
-      model.scale.set(0.01, 0.01, 0.01);
+      // 🔹 15 cm aprox
+      model.scale.set(0.15, 0.15, 0.15);
 
+      model.visible = false;
       scene.add(model);
 
-      console.log("MODELO CARGADO Y AGREGADO");
+      console.log("Modelo cargado OK");
     },
     undefined,
-    (e) => {
-      console.error("ERROR CARGANDO MODELO", e);
+    (err) => {
+      console.error("Error cargando modelo", err);
     }
   );
 
-  renderer.setAnimationLoop(() => {
+  // TOCAR PARA COLOCAR
+  renderer.domElement.addEventListener("click", () => {
+    if (reticle.visible && model) {
+      model.visible = true;
+      model.position.setFromMatrixPosition(reticle.matrix);
+    }
+  });
+
+  renderer.setAnimationLoop((timestamp, frame) => {
+
+    if (frame) {
+
+      const referenceSpace = renderer.xr.getReferenceSpace();
+      const session = renderer.xr.getSession();
+
+      if (!hitTestSourceRequested) {
+        session.requestReferenceSpace("viewer").then((space) => {
+          session.requestHitTestSource({ space }).then((source) => {
+            hitTestSource = source;
+          });
+        });
+
+        session.addEventListener("end", () => {
+          hitTestSourceRequested = false;
+          hitTestSource = null;
+        });
+
+        hitTestSourceRequested = true;
+      }
+
+      if (hitTestSource) {
+        const hitTestResults = frame.getHitTestResults(hitTestSource);
+
+        if (hitTestResults.length) {
+          const hit = hitTestResults[0];
+          const pose = hit.getPose(referenceSpace);
+
+          reticle.visible = true;
+          reticle.matrix.fromArray(pose.transform.matrix);
+        } else {
+          reticle.visible = false;
+        }
+      }
+    }
+
     renderer.render(scene, camera);
   });
 }
 </script>
+
 </body>
 </html>
-
-
