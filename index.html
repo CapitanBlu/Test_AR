@@ -2,61 +2,81 @@
 <html lang="es">
 <head>
   <meta charset="UTF-8" />
-  <title>WebAR con Three.js</title>
+  <title>WebAR Test</title>
 
-  <!-- MindAR (OBLIGATORIO) -->
+  <!-- 🔑 OBLIGATORIO en móviles -->
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no" />
+
+  <!-- MindAR -->
   <script src="https://cdn.jsdelivr.net/npm/mind-ar@1.2.5/dist/mindar-image-three.prod.js"></script>
 
   <style>
-    body {
+    html, body {
       margin: 0;
+      padding: 0;
+      width: 100%;
+      height: 100%;
       overflow: hidden;
       background: black;
+    }
+
+    #startButton {
+      position: absolute;
+      z-index: 10;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      background: black;
+      color: white;
+      font-size: 24px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
     }
   </style>
 </head>
 
 <body>
+
+<!-- 🔘 BOTÓN OBLIGATORIO -->
+<div id="startButton">Tocar para iniciar AR</div>
+
 <script type="module">
   import * as THREE from 'https://cdn.jsdelivr.net/npm/three@0.152/build/three.module.js';
   import { GLTFLoader } from 'https://cdn.jsdelivr.net/npm/three@0.152/examples/jsm/loaders/GLTFLoader.js';
 
-  // 1️⃣ Inicializar MindAR
-  const mindarThree = new window.MINDAR.IMAGE.MindARThree({
-    container: document.body,
-    imageTargetSrc: 'targets.mind'
-  });
+  const startButton = document.getElementById('startButton');
 
-  const { renderer, scene, camera } = mindarThree;
+  startButton.addEventListener('click', async () => {
+    startButton.style.display = 'none';
 
-  // 2️⃣ Luz básica
-  const light = new THREE.HemisphereLight(0xffffff, 0xbbbbff, 1);
-  scene.add(light);
+    const mindarThree = new window.MINDAR.IMAGE.MindARThree({
+      container: document.body,
+      imageTargetSrc: './targets.mind'
+    });
 
-  // 3️⃣ Anchor (imagen 0 del targets.mind)
-  const anchor = mindarThree.addAnchor(0);
+    const { renderer, scene, camera } = mindarThree;
 
-  // 4️⃣ Cargar modelo GLB
-  const loader = new GLTFLoader();
-  loader.load(
-    'model.glb',
-    (gltf) => {
+    const light = new THREE.HemisphereLight(0xffffff, 0xbbbbff, 1);
+    scene.add(light);
+
+    const anchor = mindarThree.addAnchor(0);
+
+    const loader = new GLTFLoader();
+    loader.load('./model.glb', (gltf) => {
       gltf.scene.scale.set(0.3, 0.3, 0.3);
-      gltf.scene.position.y = 0.0;
       anchor.group.add(gltf.scene);
-    },
-    undefined,
-    (error) => {
-      console.error('❌ Error cargando model.glb', error);
-    }
-  );
+    });
 
-  // 5️⃣ Iniciar AR (CLAVE: dentro de async)
-  await mindarThree.start();
+    await mindarThree.start();
 
-  renderer.setAnimationLoop(() => {
-    renderer.render(scene, camera);
+    renderer.setAnimationLoop(() => {
+      renderer.render(scene, camera);
+    });
   });
 </script>
+
 </body>
 </html>
+
