@@ -3,17 +3,17 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>WebXR AR</title>
+<title>WebXR AR Interactivo</title>
 
 <style>
   body { margin: 0; overflow: hidden; }
   #enter-ar {
     position: absolute;
-    bottom: 30px;
+    bottom: 20px;
     left: 50%;
     transform: translateX(-50%);
     padding: 14px 20px;
-    font-size: 25px;
+    font-size: 18px;
     z-index: 10;
   }
 </style>
@@ -28,11 +28,14 @@
 
 <script>
 let scene, camera, renderer;
+let model = null;
+let reticle;
+let hitTestSource = null;
+let hitTestRequested = false;
 
 const button = document.getElementById("enter-ar");
 
 button.onclick = async () => {
-
   if (!navigator.xr) {
     alert("WebXR no disponible");
     return;
@@ -47,14 +50,13 @@ button.onclick = async () => {
   button.style.display = "none";
 
   const session = await navigator.xr.requestSession("immersive-ar", {
-    requiredFeatures: ["local-floor"]
+    requiredFeatures: ["hit-test", "local-floor"]
   });
 
   initXR(session);
 };
 
 function initXR(session) {
-
   scene = new THREE.Scene();
   camera = new THREE.PerspectiveCamera();
 
@@ -63,32 +65,64 @@ function initXR(session) {
   renderer.xr.enabled = true;
   document.body.appendChild(renderer.domElement);
 
-  renderer.xr.setReferenceSpaceType("local-floor");
+  renderer.xr.setReferenceSpaceType("local");
   renderer.xr.setSession(session);
 
-  const light = new THREE.HemisphereLight(0xffffff, 0xbbbbff, 1);
-  scene.add(light);
+  scene.add(new THREE.HemisphereLight(0xffffff, 0xbbbbff, 1));
 
+  // Retícula (donde se detecta superficie)
+  const ringGeo = new THREE.RingGeometry(0.07, 0.09, 32);
+  const ringMat = new THREE.MeshBasicMaterial({ color: 0x00ffff });
+  reticle = new THREE.Mesh(ringGeo, ringMat);
+  reticle.rotation.x = -Math.PI / 2;
+  reticle.visible = false;
+  scene.add(reticle);
+
+  // Cargar modelo
   const loader = new THREE.GLTFLoader();
-  console.log("⏳ Cargando modelo...");
+  loader.load("model.glb", (gltf) => {
+    model = gltf.scene;
+    model.scale.set(0.15, 0.15, 0.15); // 15 cm
+  });
 
-  loader.load(
-    'model.glb',
-    (gltf) => {
-      console.log("✅ Modelo cargado");
-      const model = gltf.scene;
-      model.scale.set(0.3, 0.3, 0.3);
-      model.position.set(0, 0, -1);
+  session.addEventListener("select", () => {
+    if (reticle.visible && model) {
+      model.position.setFromMatrixPosition(reticle.matrix);
       scene.add(model);
-    },
-    undefined,
-    (error) => {
-      console.error("❌ Error cargando el modelo", error);
-      alert("NO se pudo cargar model.glb");
     }
-  );
+  });
 
-  renderer.setAnimationLoop(() => {
+  renderer.setAnimationLoop((timestamp, frame) => {
+    if (frame) {
+      const referenceSpace = renderer.xr.getReferenceSpace();
+      const session = renderer.xr.getSession();
+
+      if (!hitTestRequested) {
+        session.requestReferenceSpace("viewer").then((space) => {
+          session.requestHitTestSource({ space }).then((source) => {
+            hitTestSource = source;
+          });
+        });
+        session.addEventListener("end", () => {
+          hitTestSource = null;
+          hitTestRequested = false;
+        });
+        hitTestRequested = true;
+      }
+
+      if (hitTestSource) {
+        const hitTestResults = frame.getHitTestResults(hitTestSource);
+        if (hitTestResults.length) {
+          const hit = hitTestResults[0];
+          const pose = hit.getPose(referenceSpace);
+          reticle.visible = true;
+          reticle.matrix.fromArray(pose.transform.matrix);
+        } else {
+          reticle.visible = false;
+        }
+      }
+    }
+
     renderer.render(scene, camera);
   });
 }
@@ -96,5 +130,3 @@ function initXR(session) {
 
 </body>
 </html>
-
-
