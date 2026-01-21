@@ -3,7 +3,7 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>WebXR AR con modelo</title>
+<title>WebXR AR</title>
 
 <style>
   body { margin: 0; overflow: hidden; }
@@ -66,23 +66,25 @@ function initXR(session) {
   renderer.xr.setReferenceSpaceType("local-floor");
   renderer.xr.setSession(session);
 
-  // Luz
   const light = new THREE.HemisphereLight(0xffffff, 0xbbbbff, 1);
   scene.add(light);
 
-  // Cargar modelo GLB
   const loader = new THREE.GLTFLoader();
+  console.log("⏳ Cargando modelo...");
+
   loader.load(
     'model.glb',
     (gltf) => {
+      console.log("✅ Modelo cargado");
       const model = gltf.scene;
       model.scale.set(0.3, 0.3, 0.3);
-      model.position.set(0, 0, -1); // 1 metro delante
+      model.position.set(0, 0, -1);
       scene.add(model);
     },
     undefined,
     (error) => {
-      console.error("Error cargando el modelo:", error);
+      console.error("❌ Error cargando el modelo", error);
+      alert("NO se pudo cargar model.glb");
     }
   );
 
@@ -94,4 +96,3 @@ function initXR(session) {
 
 </body>
 </html>
-
