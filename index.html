@@ -1,92 +1,88 @@
 <!DOCTYPE html>
 <html lang="es">
 <head>
-  <meta charset="UTF-8">
+  <meta charset="UTF-8" />
   <title>WebAR MindAR</title>
-  <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
 
-  <!-- Three.js NO module -->
-  <script src="https://cdn.jsdelivr.net/npm/three@0.152.2/build/three.min.js"></script>
-  <script src="https://cdn.jsdelivr.net/npm/three@0.152.2/examples/js/loaders/GLTFLoader.js"></script>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no" />
 
-  <!-- MindAR -->
-  <script src="https://cdn.jsdelivr.net/npm/mind-ar@1.2.5/dist/mindar-image-three.prod.js"></script>
+  <script src="https://unpkg.com/three@0.152.2/build/three.min.js"></script>
+  <script src="https://unpkg.com/mind-ar@1.2.5/dist/mindar-image-three.prod.js"></script>
 
   <style>
     html, body {
       margin: 0;
       padding: 0;
+      overflow: hidden;
       width: 100%;
       height: 100%;
-      overflow: hidden;
       background: black;
-      font-family: Arial, sans-serif;
     }
-
-    #startButton {
-      position: fixed;
-      inset: 0;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      font-size: 22px;
-      color: white;
-      background: black;
-      z-index: 9999;
-      cursor: pointer;
-      text-align: center;
+    #start {
+      position: absolute;
+      z-index: 10;
+      bottom: 40px;
+      left: 50%;
+      transform: translateX(-50%);
+      padding: 14px 22px;
+      font-size: 18px;
     }
   </style>
 </head>
 
 <body>
 
-<div id="startButton">TOCAR PARA INICIAR AR</div>
+<button id="start">Iniciar cámara</button>
 
 <script>
-  const startButton = document.getElementById("startButton");
+  const startButton = document.getElementById("start");
 
   startButton.addEventListener("click", async () => {
-    try {
-      // 🔑 Fuerza permiso cámara
-      await navigator.mediaDevices.getUserMedia({ video: true });
-    } catch (e) {
-      alert("Error cámara: " + e);
-      return;
-    }
 
-    startButton.remove();
+    startButton.style.display = "none";
 
     const mindarThree = new window.MINDAR.IMAGE.MindARThree({
       container: document.body,
-      imageTargetSrc: "targets.mind"
+      imageTargetSrc: "targets.mind",
     });
 
-    const renderer = mindarThree.renderer;
-    const scene = mindarThree.scene;
-    const camera = mindarThree.camera;
+    const { renderer, scene, camera } = mindarThree;
 
+    // Luz
     const light = new THREE.HemisphereLight(0xffffff, 0xbbbbff, 1);
     scene.add(light);
 
+    // Anchor
     const anchor = mindarThree.addAnchor(0);
 
+    // Modelo
     const loader = new THREE.GLTFLoader();
-    loader.load("model.glb", function (gltf) {
+    loader.load("model.glb", (gltf) => {
       gltf.scene.scale.set(0.3, 0.3, 0.3);
+      gltf.scene.visible = false;
       anchor.group.add(gltf.scene);
+
+      anchor.onTargetFound = () => {
+        gltf.scene.visible = true;
+      };
+
+      anchor.onTargetLost = () => {
+        gltf.scene.visible = false;
+      };
     });
 
     await mindarThree.start();
 
-    renderer.setAnimationLoop(function () {
+    renderer.setAnimationLoop(() => {
       renderer.render(scene, camera);
     });
+
   });
 </script>
 
 </body>
 </html>
+
 
 
 
