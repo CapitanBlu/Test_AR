@@ -7,13 +7,24 @@
 
 <script src="https://unpkg.com/three@0.152.2/build/three.min.js"></script>
 <script src="https://unpkg.com/three@0.152.2/examples/js/loaders/GLTFLoader.js"></script>
+
+<style>
+  body { margin:0; overflow:hidden; background:black; }
+  #startAR {
+    position: absolute;
+    z-index: 10;
+    bottom: 20px;
+    left: 50%;
+    transform: translateX(-50%);
+    padding: 12px 20px;
+    font-size: 16px;
+  }
+</style>
 </head>
 
-<body style="margin:0; overflow:hidden;">
+<body>
 
-<button id="startAR" style="position:absolute;z-index:10;">
-INICIAR AR
-</button>
+<button id="startAR">INICIAR AR</button>
 
 <script>
 let scene, camera, renderer;
@@ -26,27 +37,32 @@ document.getElementById("startAR").onclick = startAR;
 async function startAR() {
   document.getElementById("startAR").style.display = "none";
 
+  // Escena
   scene = new THREE.Scene();
+
   camera = new THREE.PerspectiveCamera();
 
   renderer = new THREE.WebGLRenderer({ alpha:true, antialias:true });
   renderer.setSize(window.innerWidth, window.innerHeight);
   renderer.xr.enabled = true;
+  renderer.xr.setReferenceSpaceType('local'); // 🔥 CLAVE PARA EVITAR PANTALLA NEGRA
   document.body.appendChild(renderer.domElement);
 
+  // Luz
   scene.add(new THREE.HemisphereLight(0xffffff, 0xbbbbff, 1));
 
+  // Sesión AR
   const session = await navigator.xr.requestSession("immersive-ar", {
     requiredFeatures: ["hit-test"]
   });
-
   renderer.xr.setSession(session);
 
+  // Reference spaces
   refSpace = await session.requestReferenceSpace("local");
   const viewerSpace = await session.requestReferenceSpace("viewer");
   hitTestSource = await session.requestHitTestSource({ space: viewerSpace });
 
-  // 🔹 Reticle
+  // Reticle
   reticle = new THREE.Mesh(
     new THREE.RingGeometry(0.05, 0.06, 32),
     new THREE.MeshBasicMaterial({ color: 0x00ff00 })
@@ -56,17 +72,22 @@ async function startAR() {
   reticle.visible = false;
   scene.add(reticle);
 
-  // 🔹 Cargar modelo
+  // Modelo
   const loader = new THREE.GLTFLoader();
-  loader.load("model.glb", (gltf) => {
-    model = gltf.scene;
-    model.scale.set(0.15, 0.15, 0.15); // ~15 cm
-    model.visible = false;
-    scene.add(model);
-    console.log("Modelo cargado");
-  });
+  loader.load(
+    "model.glb",
+    (gltf) => {
+      model = gltf.scene;
+      model.scale.set(0.15, 0.15, 0.15); // ~15 cm
+      model.visible = false;
+      scene.add(model);
+      console.log("Modelo cargado");
+    },
+    undefined,
+    (err) => console.error("Error cargando modelo", err)
+  );
 
-  // 🔹 Tap
+  // Tap controller
   controller = renderer.xr.getController(0);
   controller.addEventListener("select", () => {
     if (reticle.visible && model) {
@@ -76,10 +97,11 @@ async function startAR() {
   });
   scene.add(controller);
 
-  renderer.setAnimationLoop((t, frame) => {
+  // Loop
+  renderer.setAnimationLoop((time, frame) => {
     if (frame && hitTestSource) {
       const hits = frame.getHitTestResults(hitTestSource);
-      if (hits.length) {
+      if (hits.length > 0) {
         const pose = hits[0].getPose(refSpace);
         reticle.visible = true;
         reticle.matrix.fromArray(pose.transform.matrix);
