@@ -1,11 +1,10 @@
 <!DOCTYPE html>
 <html lang="es">
 <head>
-  <meta charset="utf-8" />
-  <title>WebAR con Three.js</title>
+  <meta charset="UTF-8">
+  <title>WebAR Test</title>
   <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
 
-  <!-- MindAR -->
   <script src="https://cdn.jsdelivr.net/npm/mind-ar@1.2.5/dist/mindar-image-three.prod.js"></script>
 
   <style>
@@ -14,31 +13,30 @@
       padding: 0;
       width: 100%;
       height: 100%;
-      overflow: hidden;
       background: #0e4f5c;
+      overflow: hidden;
       font-family: Arial, sans-serif;
     }
 
     #startButton {
-      position: absolute;
-      top: 50%;
-      left: 50%;
-      transform: translate(-50%, -50%);
-      padding: 18px 30px;
-      font-size: 20px;
+      position: fixed;
+      inset: 0;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 22px;
       color: white;
       background: #0e4f5c;
-      border: 2px solid white;
-      border-radius: 12px;
+      z-index: 9999;
       cursor: pointer;
-      z-index: 10;
+      text-align: center;
     }
   </style>
 </head>
 
 <body>
 
-<button id="startButton">TOCAR PARA INICIAR AR</button>
+<div id="startButton">TOCAR PARA INICIAR AR</div>
 
 <script type="module">
   import * as THREE from "https://cdn.jsdelivr.net/npm/three@0.152/build/three.module.js";
@@ -46,33 +44,37 @@
 
   const startButton = document.getElementById("startButton");
 
-  const mindarThree = new window.MINDAR.IMAGE.MindARThree({
-    container: document.body,
-    imageTargetSrc: "targets.mind",
-  });
+  startButton.addEventListener("pointerdown", async () => {
+    try {
+      // 🔥 FORZAR PERMISO DE CÁMARA
+      await navigator.mediaDevices.getUserMedia({ video: true });
+      console.log("Camara concedida");
+    } catch (e) {
+      alert("La cámara fue bloqueada: " + e);
+      return;
+    }
 
-  const { renderer, scene, camera } = mindarThree;
+    startButton.remove();
 
-  // Luz
-  const light = new THREE.HemisphereLight(0xffffff, 0xbbbbff, 1);
-  scene.add(light);
+    const mindarThree = new window.MINDAR.IMAGE.MindARThree({
+      container: document.body,
+      imageTargetSrc: "targets.mind"
+    });
 
-  // Anchor
-  const anchor = mindarThree.addAnchor(0);
+    const { renderer, scene, camera } = mindarThree;
 
-  // Modelo
-  const loader = new GLTFLoader();
-  loader.load("model.glb", (gltf) => {
-    gltf.scene.scale.set(0.3, 0.3, 0.3);
-    anchor.group.add(gltf.scene);
-  });
+    const light = new THREE.HemisphereLight(0xffffff, 0xbbbbff, 1);
+    scene.add(light);
 
-  // 🔑 EVENTO CORRECTO PARA ANDROID
-  startButton.addEventListener("pointerdown", async (e) => {
-    e.preventDefault();
+    const anchor = mindarThree.addAnchor(0);
 
-    startButton.style.display = "none";
+    const loader = new GLTFLoader();
+    loader.load("model.glb", (gltf) => {
+      gltf.scene.scale.set(0.3, 0.3, 0.3);
+      anchor.group.add(gltf.scene);
+    });
 
+    // 🔥 AHORA MindAR YA NO PUEDE FALLAR
     await mindarThree.start();
 
     renderer.setAnimationLoop(() => {
@@ -83,6 +85,8 @@
 
 </body>
 </html>
+
+
 
 
 
