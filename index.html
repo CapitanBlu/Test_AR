@@ -1,60 +1,76 @@
 <!DOCTYPE html>
 <html lang="en">
-  <head>
-    <meta charset="utf-8" />
-    <title>MindAR Image Target</title>
+<head>
+  <meta charset="UTF-8" />
+  <title>MindAR No Module</title>
 
-    <!-- MindAR -->
-    <script src="https://cdn.jsdelivr.net/npm/mind-ar@1.2.5/dist/mindar-image-three.prod.js"></script>
+  <!-- THREE (NO MODULE) -->
+  <script src="https://cdn.jsdelivr.net/npm/three@0.152.2/build/three.min.js"></script>
 
-    <style>
-      body {
-        margin: 0;
-        overflow: hidden;
-      }
-      canvas {
-        position: absolute;
-        top: 0;
-        left: 0;
-      }
-    </style>
-  </head>
+  <!-- MINDAR -->
+  <script src="https://cdn.jsdelivr.net/npm/mind-ar@1.2.5/dist/mindar-image-three.prod.js"></script>
 
-  <body>
-    <script type="module">
-      import * as THREE from "https://cdn.jsdelivr.net/npm/three@0.152.2/build/three.module.js";
+  <style>
+    body {
+      margin: 0;
+      overflow: hidden;
+      background: black;
+    }
 
-      const mindarThree = new window.MINDAR.IMAGE.MindARThree({
-        container: document.body,
-        imageTargetSrc: "./targets.mind", // 👈 TU TARGET
-      });
+    #startButton {
+      position: fixed;
+      inset: 0;
+      background: black;
+      color: white;
+      font-size: 22px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      z-index: 10;
+      cursor: pointer;
+    }
+  </style>
+</head>
 
-      const { renderer, scene, camera } = mindarThree;
+<body>
 
-      // luz
-      const light = new THREE.HemisphereLight(0xffffff, 0xbbbbff, 1);
-      scene.add(light);
+<div id="startButton">TOCAR PARA INICIAR AR</div>
 
-      // anchor del target 0
-      const anchor = mindarThree.addAnchor(0);
+<script>
+  const startButton = document.getElementById("startButton");
 
-      // modelo simple (cubo)
-      const geometry = new THREE.BoxGeometry(0.3, 0.3, 0.3);
-      const material = new THREE.MeshStandardMaterial({ color: 0x00ff00 });
-      const cube = new THREE.Mesh(geometry, material);
+  startButton.addEventListener("click", async () => {
+    startButton.style.display = "none";
 
-      cube.position.y = 0.15;
-      anchor.group.add(cube);
+    const mindarThree = new MINDAR.IMAGE.MindARThree({
+      container: document.body,
+      imageTargetSrc: "./targets.mind",
+    });
 
-      // iniciar AR
-      await mindarThree.start();
+    const { renderer, scene, camera } = mindarThree;
 
-      renderer.setAnimationLoop(() => {
-        renderer.render(scene, camera);
-      });
-    </script>
-  </body>
+    const light = new THREE.HemisphereLight(0xffffff, 0xbbbbff, 1);
+    scene.add(light);
+
+    // Anchor del target 0
+    const anchor = mindarThree.addAnchor(0);
+
+    // Objeto visible (debug)
+    const geometry = new THREE.BoxGeometry(0.3, 0.3, 0.3);
+    const material = new THREE.MeshStandardMaterial({ color: 0x00ff00 });
+    const cube = new THREE.Mesh(geometry, material);
+    cube.position.y = 0.15;
+
+    anchor.group.add(cube);
+
+    // 🚨 LA CÁMARA SE PIDE AQUÍ (POST TAP)
+    await mindarThree.start();
+
+    renderer.setAnimationLoop(() => {
+      renderer.render(scene, camera);
+    });
+  });
+</script>
+
+</body>
 </html>
-
-
-
