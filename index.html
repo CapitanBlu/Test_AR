@@ -1,11 +1,14 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="es">
 <head>
   <meta charset="UTF-8" />
-  <title>MindAR No Module</title>
+  <title>AR con Target + Modelo</title>
 
-  <!-- THREE (NO MODULE) -->
+  <!-- THREE -->
   <script src="https://cdn.jsdelivr.net/npm/three@0.152.2/build/three.min.js"></script>
+
+  <!-- GLTF LOADER (NO MODULE) -->
+  <script src="https://cdn.jsdelivr.net/npm/three@0.152.2/examples/js/loaders/GLTFLoader.js"></script>
 
   <!-- MINDAR -->
   <script src="https://cdn.jsdelivr.net/npm/mind-ar@1.2.5/dist/mindar-image-three.prod.js"></script>
@@ -28,13 +31,16 @@
       justify-content: center;
       z-index: 10;
       cursor: pointer;
+      text-align: center;
     }
   </style>
 </head>
 
 <body>
 
-<div id="startButton">TOCAR PARA INICIAR AR</div>
+<div id="startButton">
+  TOCAR PARA INICIAR AR
+</div>
 
 <script>
   const startButton = document.getElementById("startButton");
@@ -42,6 +48,7 @@
   startButton.addEventListener("click", async () => {
     startButton.style.display = "none";
 
+    // INIT MINDAR
     const mindarThree = new MINDAR.IMAGE.MindARThree({
       container: document.body,
       imageTargetSrc: "./targets.mind",
@@ -49,21 +56,32 @@
 
     const { renderer, scene, camera } = mindarThree;
 
+    // LUZ
     const light = new THREE.HemisphereLight(0xffffff, 0xbbbbff, 1);
     scene.add(light);
 
-    // Anchor del target 0
+    // TARGET 0
     const anchor = mindarThree.addAnchor(0);
 
-    // Objeto visible (debug)
-    const geometry = new THREE.BoxGeometry(0.3, 0.3, 0.3);
-    const material = new THREE.MeshStandardMaterial({ color: 0x00ff00 });
-    const cube = new THREE.Mesh(geometry, material);
-    cube.position.y = 0.15;
+    // CARGAR MODELO
+    const loader = new THREE.GLTFLoader();
+    loader.load(
+      "./model.glb",
+      (gltf) => {
+        const model = gltf.scene;
 
-    anchor.group.add(cube);
+        model.scale.set(0.3, 0.3, 0.3);
+        model.position.y = 0;
 
-    // 🚨 LA CÁMARA SE PIDE AQUÍ (POST TAP)
+        anchor.group.add(model);
+      },
+      undefined,
+      (error) => {
+        console.error("Error cargando el modelo:", error);
+      }
+    );
+
+    // 🔥 PEDIR CÁMARA (POST TAP)
     await mindarThree.start();
 
     renderer.setAnimationLoop(() => {
