@@ -1,92 +1,60 @@
 <!DOCTYPE html>
-<html lang="es">
-<head>
-<meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <title>MindAR Image Target</title>
 
-<style>
-html, body {
-  margin: 0;
-  padding: 0;
-  overflow: hidden;
-  background: black;
-}
+    <!-- MindAR -->
+    <script src="https://cdn.jsdelivr.net/npm/mind-ar@1.2.5/dist/mindar-image-three.prod.js"></script>
 
-#start {
-  position: fixed;
-  inset: 0;
-  z-index: 10;
-  font-size: 20px;
-}
+    <style>
+      body {
+        margin: 0;
+        overflow: hidden;
+      }
+      canvas {
+        position: absolute;
+        top: 0;
+        left: 0;
+      }
+    </style>
+  </head>
 
-video, canvas {
-  position: fixed;
-  top: 0;
-  left: 0;
-  width: 100vw;
-  height: 100vh;
-}
-</style>
-</head>
+  <body>
+    <script type="module">
+      import * as THREE from "https://cdn.jsdelivr.net/npm/three@0.152.2/build/three.module.js";
 
-<body>
+      const mindarThree = new window.MINDAR.IMAGE.MindARThree({
+        container: document.body,
+        imageTargetSrc: "./targets.mind", // 👈 TU TARGET
+      });
 
-<button id="start">TOCAR PARA INICIAR AR</button>
-<video id="video" autoplay playsinline muted></video>
+      const { renderer, scene, camera } = mindarThree;
 
-<script type="module">
-import * as THREE from "https://cdn.jsdelivr.net/npm/three@0.152.2/build/three.module.js";
-import { GLTFLoader } from "https://cdn.jsdelivr.net/npm/three@0.152.2/examples/jsm/loaders/GLTFLoader.js";
+      // luz
+      const light = new THREE.HemisphereLight(0xffffff, 0xbbbbff, 1);
+      scene.add(light);
 
-const btn = document.getElementById("start");
-const video = document.getElementById("video");
+      // anchor del target 0
+      const anchor = mindarThree.addAnchor(0);
 
-btn.onclick = async () => {
-  btn.remove();
+      // modelo simple (cubo)
+      const geometry = new THREE.BoxGeometry(0.3, 0.3, 0.3);
+      const material = new THREE.MeshStandardMaterial({ color: 0x00ff00 });
+      const cube = new THREE.Mesh(geometry, material);
 
-  const stream = await navigator.mediaDevices.getUserMedia({
-    video: { facingMode: "environment" },
-    audio: false
-  });
+      cube.position.y = 0.15;
+      anchor.group.add(cube);
 
-  video.srcObject = stream;
-  await video.play();
+      // iniciar AR
+      await mindarThree.start();
 
-  initThree();
-};
-
-function initThree() {
-  const scene = new THREE.Scene();
-
-  const camera = new THREE.PerspectiveCamera(
-    60,
-    window.innerWidth / window.innerHeight,
-    0.01,
-    100
-  );
-  camera.position.z = 1;
-
-  const renderer = new THREE.WebGLRenderer({ alpha: true });
-  renderer.setSize(window.innerWidth, window.innerHeight);
-  document.body.appendChild(renderer.domElement);
-
-  scene.add(new THREE.HemisphereLight(0xffffff, 0x444444, 1));
-
-  const loader = new GLTFLoader();
-  loader.load("model.glb", gltf => {
-    const model = gltf.scene;
-    model.scale.set(0.3, 0.3, 0.3);
-    scene.add(model);
-  });
-
-  function animate() {
-    requestAnimationFrame(animate);
-    renderer.render(scene, camera);
-  }
-  animate();
-}
-</script>
-
-</body>
+      renderer.setAnimationLoop(() => {
+        renderer.render(scene, camera);
+      });
+    </script>
+  </body>
 </html>
+
+
 
