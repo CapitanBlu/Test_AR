@@ -10,20 +10,20 @@
     body {
       margin: 0;
       overflow: hidden;
-      background: #0f4c5c;
+      background: #0e4b5a;
+      font-family: Arial, sans-serif;
+    }
+
+    #startButton {
+      position: fixed;
+      inset: 0;
       display: flex;
       align-items: center;
       justify-content: center;
-      height: 100vh;
-      font-family: sans-serif;
-    }
-
-    #start {
-      font-size: 22px;
-      padding: 20px 30px;
-      background: white;
-      border: none;
-      border-radius: 12px;
+      font-size: 24px;
+      color: white;
+      background: #0e4b5a;
+      z-index: 10;
       cursor: pointer;
     }
   </style>
@@ -31,36 +31,35 @@
 
 <body>
 
-<button id="start">TOCAR PARA INICIAR AR</button>
+<div id="startButton">TOCAR PARA INICIAR AR</div>
 
 <script type="module">
   import * as THREE from 'https://cdn.jsdelivr.net/npm/three@0.152/build/three.module.js';
   import { GLTFLoader } from 'https://cdn.jsdelivr.net/npm/three@0.152/examples/jsm/loaders/GLTFLoader.js';
 
-  const startButton = document.getElementById('start');
+  const startButton = document.getElementById("startButton");
 
-  startButton.addEventListener('click', async () => {
-    startButton.remove();
+  const mindarThree = new window.MINDAR.IMAGE.MindARThree({
+    container: document.body,
+    imageTargetSrc: 'targets.mind'
+  });
 
-    const mindarThree = new window.MINDAR.IMAGE.MindARThree({
-      container: document.body,
-      imageTargetSrc: 'targets.mind'
-    });
+  const { renderer, scene, camera } = mindarThree;
 
-    const { renderer, scene, camera } = mindarThree;
+  const light = new THREE.HemisphereLight(0xffffff, 0xbbbbff, 1);
+  scene.add(light);
 
-    const light = new THREE.HemisphereLight(0xffffff, 0xbbbbff, 1);
-    scene.add(light);
+  const anchor = mindarThree.addAnchor(0);
 
-    const anchor = mindarThree.addAnchor(0);
+  const loader = new GLTFLoader();
+  loader.load('model.glb', (gltf) => {
+    gltf.scene.scale.set(0.3, 0.3, 0.3);
+    anchor.group.add(gltf.scene);
+  });
 
-    const loader = new GLTFLoader();
-    loader.load('model.glb', (gltf) => {
-      gltf.scene.scale.set(0.3, 0.3, 0.3);
-      anchor.group.add(gltf.scene);
-    });
+  startButton.addEventListener("click", async () => {
+    startButton.style.display = "none";
 
-    // 🔥 ESTA LÍNEA AHORA SÍ DISPARA LA CÁMARA
     await mindarThree.start();
 
     renderer.setAnimationLoop(() => {
@@ -71,5 +70,6 @@
 
 </body>
 </html>
+
 
 
