@@ -1,76 +1,75 @@
 <!DOCTYPE html>
 <html lang="es">
 <head>
-<meta charset="UTF-8">
-<title>WebAR Test</title>
+  <meta charset="UTF-8" />
+  <title>WebAR MindAR</title>
 
-<meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+  <script src="https://cdn.jsdelivr.net/npm/mind-ar@1.2.5/dist/mindar-image-three.prod.js"></script>
 
-<script src="https://cdn.jsdelivr.net/npm/mind-ar@1.2.5/dist/mindar-image-three.prod.js"></script>
+  <style>
+    body {
+      margin: 0;
+      overflow: hidden;
+      background: #0f4c5c;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      height: 100vh;
+      font-family: sans-serif;
+    }
 
-<style>
-html, body {
-  margin: 0;
-  padding: 0;
-  width: 100%;
-  height: 100%;
-  overflow: hidden;
-  background: black;
-}
-
-#startButton {
-  position: fixed;
-  inset: 0;
-  z-index: 9999;
-  background: black;
-  color: white;
-  font-size: 24px;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  cursor: pointer;
-}
-</style>
+    #start {
+      font-size: 22px;
+      padding: 20px 30px;
+      background: white;
+      border: none;
+      border-radius: 12px;
+      cursor: pointer;
+    }
+  </style>
 </head>
 
 <body>
 
-<div id="startButton">TOCAR PARA INICIAR AR</div>
+<button id="start">TOCAR PARA INICIAR AR</button>
 
 <script type="module">
-import * as THREE from 'https://cdn.jsdelivr.net/npm/three@0.152/build/three.module.js';
-import { GLTFLoader } from 'https://cdn.jsdelivr.net/npm/three@0.152/examples/jsm/loaders/GLTFLoader.js';
+  import * as THREE from 'https://cdn.jsdelivr.net/npm/three@0.152/build/three.module.js';
+  import { GLTFLoader } from 'https://cdn.jsdelivr.net/npm/three@0.152/examples/jsm/loaders/GLTFLoader.js';
 
-const button = document.getElementById('startButton');
+  const startButton = document.getElementById('start');
 
-button.onclick = async () => {
-  button.remove(); // 👈 elimina el botón
+  startButton.addEventListener('click', async () => {
+    startButton.remove();
 
-  const mindarThree = new window.MINDAR.IMAGE.MindARThree({
-    container: document.body,
-    imageTargetSrc: './targets.mind'
+    const mindarThree = new window.MINDAR.IMAGE.MindARThree({
+      container: document.body,
+      imageTargetSrc: 'targets.mind'
+    });
+
+    const { renderer, scene, camera } = mindarThree;
+
+    const light = new THREE.HemisphereLight(0xffffff, 0xbbbbff, 1);
+    scene.add(light);
+
+    const anchor = mindarThree.addAnchor(0);
+
+    const loader = new GLTFLoader();
+    loader.load('model.glb', (gltf) => {
+      gltf.scene.scale.set(0.3, 0.3, 0.3);
+      anchor.group.add(gltf.scene);
+    });
+
+    // 🔥 ESTA LÍNEA AHORA SÍ DISPARA LA CÁMARA
+    await mindarThree.start();
+
+    renderer.setAnimationLoop(() => {
+      renderer.render(scene, camera);
+    });
   });
-
-  const { renderer, scene, camera } = mindarThree;
-
-  const light = new THREE.HemisphereLight(0xffffff, 0xbbbbff, 1);
-  scene.add(light);
-
-  const anchor = mindarThree.addAnchor(0);
-
-  const loader = new GLTFLoader();
-  loader.load('./model.glb', gltf => {
-    gltf.scene.scale.set(0.3, 0.3, 0.3);
-    anchor.group.add(gltf.scene);
-  });
-
-  await mindarThree.start();
-
-  renderer.setAnimationLoop(() => {
-    renderer.render(scene, camera);
-  });
-};
 </script>
 
 </body>
 </html>
+
+
