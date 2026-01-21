@@ -1,63 +1,76 @@
 <!DOCTYPE html>
 <html lang="es">
 <head>
-  <meta charset="UTF-8" />
-  <title>WebAR MindAR</title>
+  <meta charset="utf-8" />
+  <title>WebAR con Three.js</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
 
+  <!-- MindAR -->
   <script src="https://cdn.jsdelivr.net/npm/mind-ar@1.2.5/dist/mindar-image-three.prod.js"></script>
 
   <style>
-    body {
+    html, body {
       margin: 0;
+      padding: 0;
+      width: 100%;
+      height: 100%;
       overflow: hidden;
-      background: #0e4b5a;
+      background: #0e4f5c;
       font-family: Arial, sans-serif;
     }
 
     #startButton {
-      position: fixed;
-      inset: 0;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      font-size: 24px;
+      position: absolute;
+      top: 50%;
+      left: 50%;
+      transform: translate(-50%, -50%);
+      padding: 18px 30px;
+      font-size: 20px;
       color: white;
-      background: #0e4b5a;
-      z-index: 10;
+      background: #0e4f5c;
+      border: 2px solid white;
+      border-radius: 12px;
       cursor: pointer;
+      z-index: 10;
     }
   </style>
 </head>
 
 <body>
 
-<div id="startButton">TOCAR PARA INICIAR AR</div>
+<button id="startButton">TOCAR PARA INICIAR AR</button>
 
 <script type="module">
-  import * as THREE from 'https://cdn.jsdelivr.net/npm/three@0.152/build/three.module.js';
-  import { GLTFLoader } from 'https://cdn.jsdelivr.net/npm/three@0.152/examples/jsm/loaders/GLTFLoader.js';
+  import * as THREE from "https://cdn.jsdelivr.net/npm/three@0.152/build/three.module.js";
+  import { GLTFLoader } from "https://cdn.jsdelivr.net/npm/three@0.152/examples/jsm/loaders/GLTFLoader.js";
 
   const startButton = document.getElementById("startButton");
 
   const mindarThree = new window.MINDAR.IMAGE.MindARThree({
     container: document.body,
-    imageTargetSrc: 'targets.mind'
+    imageTargetSrc: "targets.mind",
   });
 
   const { renderer, scene, camera } = mindarThree;
 
+  // Luz
   const light = new THREE.HemisphereLight(0xffffff, 0xbbbbff, 1);
   scene.add(light);
 
+  // Anchor
   const anchor = mindarThree.addAnchor(0);
 
+  // Modelo
   const loader = new GLTFLoader();
-  loader.load('model.glb', (gltf) => {
+  loader.load("model.glb", (gltf) => {
     gltf.scene.scale.set(0.3, 0.3, 0.3);
     anchor.group.add(gltf.scene);
   });
 
-  startButton.addEventListener("click", async () => {
+  // 🔑 EVENTO CORRECTO PARA ANDROID
+  startButton.addEventListener("pointerdown", async (e) => {
+    e.preventDefault();
+
     startButton.style.display = "none";
 
     await mindarThree.start();
@@ -70,6 +83,8 @@
 
 </body>
 </html>
+
+
 
 
 
