@@ -7,28 +7,23 @@
 
 <script src="https://unpkg.com/three@0.152.2/build/three.min.js"></script>
 <script src="https://unpkg.com/three@0.152.2/examples/js/loaders/GLTFLoader.js"></script>
-
-<style>
-  body { margin:0; overflow:hidden; background:black; }
-  #startAR {
-    position: absolute;
-    z-index: 10;
-    bottom: 20px;
-    left: 50%;
-    transform: translateX(-50%);
-    padding: 12px 20px;
-    font-size: 16px;
-  }
-</style>
 </head>
 
-<body>
-
-<button id="startAR">INICIAR AR</button>
+<body style="margin:0; overflow:hidden; background:black;">
+<button id="startAR" style="
+  position:absolute;
+  z-index:10;
+  top:20px;
+  left:20px;
+  padding:12px 18px;
+  font-size:16px;
+">
+INICIAR AR
+</button>
 
 <script>
 let scene, camera, renderer;
-let controller, reticle, model;
+let reticle, model;
 let hitTestSource = null;
 let refSpace = null;
 
@@ -37,34 +32,41 @@ document.getElementById("startAR").onclick = startAR;
 async function startAR() {
   document.getElementById("startAR").style.display = "none";
 
-  // Escena
+  // ESCENA
   scene = new THREE.Scene();
 
+  // CÁMARA XR (NO perspective normal)
   camera = new THREE.PerspectiveCamera();
 
-  renderer = new THREE.WebGLRenderer({ alpha:true, antialias:true });
+  // RENDERER
+  renderer = new THREE.WebGLRenderer({
+    alpha: true,
+    antialias: true,
+    preserveDrawingBuffer: true
+  });
   renderer.setSize(window.innerWidth, window.innerHeight);
   renderer.xr.enabled = true;
-  renderer.xr.setReferenceSpaceType('local'); // 🔥 CLAVE PARA EVITAR PANTALLA NEGRA
   document.body.appendChild(renderer.domElement);
 
-  // Luz
-  scene.add(new THREE.HemisphereLight(0xffffff, 0xbbbbff, 1));
+  // LUZ
+  scene.add(new THREE.HemisphereLight(0xffffff, 0xbbbbff, 1.2));
 
-  // Sesión AR
+  // SESIÓN AR
   const session = await navigator.xr.requestSession("immersive-ar", {
     requiredFeatures: ["hit-test"]
   });
-  renderer.xr.setSession(session);
 
-  // Reference spaces
+  renderer.xr.setReferenceSpaceType("local");
+  await renderer.xr.setSession(session);
+
+  // ESPACIOS
   refSpace = await session.requestReferenceSpace("local");
   const viewerSpace = await session.requestReferenceSpace("viewer");
   hitTestSource = await session.requestHitTestSource({ space: viewerSpace });
 
-  // Reticle
+  // RETÍCULA
   reticle = new THREE.Mesh(
-    new THREE.RingGeometry(0.05, 0.06, 32),
+    new THREE.RingGeometry(0.06, 0.08, 32),
     new THREE.MeshBasicMaterial({ color: 0x00ff00 })
   );
   reticle.rotation.x = -Math.PI / 2;
@@ -72,32 +74,34 @@ async function startAR() {
   reticle.visible = false;
   scene.add(reticle);
 
-  // Modelo
+  // MODELO
   const loader = new THREE.GLTFLoader();
-  loader.load(
-    "model.glb",
-    (gltf) => {
-      model = gltf.scene;
-      model.scale.set(0.15, 0.15, 0.15); // ~15 cm
-      model.visible = false;
-      scene.add(model);
-      console.log("Modelo cargado");
-    },
-    undefined,
-    (err) => console.error("Error cargando modelo", err)
-  );
+  loader.load("model.glb", (gltf) => {
+    model = gltf.scene;
 
-  // Tap controller
-  controller = renderer.xr.getController(0);
+    // === ESCALA FÍSICA ===
+    // 15 cm = 0.15 metros
+    model.scale.set(0.15, 0.15, 0.15);
+
+    // Centrar pivote
+    const box = new THREE.Box3().setFromObject(model);
+    const center = box.getCenter(new THREE.Vector3());
+    model.position.sub(center);
+
+    console.log("Modelo cargado OK");
+  });
+
+  // TAP PARA COLOCAR
+  const controller = renderer.xr.getController(0);
   controller.addEventListener("select", () => {
-    if (reticle.visible && model) {
+    if (reticle.visible && model && !model.parent) {
       model.position.setFromMatrixPosition(reticle.matrix);
-      model.visible = true;
+      scene.add(model);
     }
   });
   scene.add(controller);
 
-  // Loop
+  // LOOP XR (ESTO ES CLAVE)
   renderer.setAnimationLoop((time, frame) => {
     if (frame && hitTestSource) {
       const hits = frame.getHitTestResults(hitTestSource);
@@ -109,10 +113,10 @@ async function startAR() {
         reticle.visible = false;
       }
     }
+
     renderer.render(scene, camera);
   });
 }
 </script>
-
 </body>
 </html>
