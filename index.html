@@ -3,65 +3,94 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Virtualizar AR</title>
-    
+    <title>Virtualizar AR Pro</title>
     <script type="module" src="https://ajax.googleapis.com/ajax/libs/model-viewer/3.4.0/model-viewer.min.js"></script>
 
     <style>
-        body { margin: 0; font-family: sans-serif; text-align: center; background: #1a1a1a; color: white; }
-        header { padding: 20px; background: #000; display: flex; align-items: center; justify-content: center; gap: 10px; }
-        .logo-text { font-size: 1.5rem; font-weight: bold; letter-spacing: 2px; color: #00d4ff; }
+        body { margin: 0; background-color: #050505; color: white; font-family: 'Arial', sans-serif; }
         
-        model-viewer {
+        /* Header con Logo de Virtualizar */
+        header {
+            padding: 15px;
+            text-align: center;
+            background: linear-gradient(180deg, rgba(0,0,0,0.8) 0%, rgba(0,0,0,0) 100%);
+            position: fixed;
             width: 100%;
-            height: 75vh;
-            --progress-bar-color: #00d4ff;
+            z-index: 10;
+        }
+        .logo { font-size: 1.2rem; font-weight: bold; color: #00d4ff; border: 2px solid #00d4ff; padding: 5px 15px; display: inline-block; }
+
+        model-viewer {
+            width: 100vw;
+            height: 100vh;
+            --ar-button-display: none; /* Escondemos el botón default para usar el nuestro */
         }
 
-        /* Botón de AR estilizado */
-        #ar-button {
-            background-image: url('https://modelviewer.dev/assets/ic_view_in_ar_new_googblue_48dp.png');
-            background-repeat: no-repeat;
-            background-size: 20px 20px;
-            background-position: 12px 50%;
-            background-color: #fff;
+        /* Botón de Iniciar y Estancar */
+        .controls {
             position: absolute;
-            left: 50%;
-            transform: translateX(-50%);
-            white-space: nowrap;
-            bottom: 132px;
-            padding: 0px 16px 0px 40px;
-            font-family: Roboto Regular, Helvetica Neue, sans-serif;
-            font-size: 14px;
-            color:#4285f4;
-            height: 36px;
-            line-height: 36px;
-            border-radius: 18px;
-            border: 1px solid #DADCE0;
+            bottom: 30px;
+            width: 100%;
+            display: flex;
+            justify-content: center;
+            gap: 10px;
+            z-index: 20;
+        }
+
+        .btn-ar {
+            background: #00d4ff;
+            color: black;
+            border: none;
+            padding: 15px 25px;
+            border-radius: 50px;
+            font-weight: bold;
+            cursor: pointer;
+            box-shadow: 0 4px 15px rgba(0, 212, 255, 0.4);
         }
     </style>
 </head>
 <body>
 
     <header>
-        <div class="logo-text">VIRTUALIZAR</div>
+        <div class="logo">VIRTUALIZAR</div>
     </header>
 
- <model-viewer 
-    src="Model.glb" 
-    ar 
-    ar-modes="webxr scene-viewer quick-look" 
-    camera-controls 
-    style="width: 100%; height: 80vh;">
-    
-    <button slot="ar-button" style="background-color: #2563eb; color: white; padding: 12px; border-radius: 8px; border: none; position: absolute; bottom: 50px; left: 50%; transform: translateX(-50%);">
-      🚀 INICIAR AR DE VIRTUALIZAR
-    </button>
-</model-viewer>
+    <model-viewer 
+        id="static-model"
+        src="Model.glb" 
+        ios-src="Model.usdz"
+        ar 
+        ar-modes="webxr scene-viewer quick-look" 
+        ar-placement="floor" 
+        camera-controls 
+        touch-action="pan-y"
+        shadow-intensity="2"
+        shadow-softness="0.5"
+        exposure="1">
 
-    <p style="padding: 20px;">Apunta al suelo y mueve el móvil en círculos para detectar la superficie.</p>
+        <div class="controls">
+            <button class="btn-ar" id="start-ar">
+                📍 INICIAR Y ANCLAR MODELO
+            </button>
+        </div>
 
+    </model-viewer>
+
+    <script>
+        const modelViewer = document.querySelector("#static-model");
+        const arButton = document.querySelector("#start-ar");
+
+        arButton.addEventListener('click', () => {
+            // Activa el modo AR manualmente
+            modelViewer.activateAR();
+        });
+
+        // Evento cuando el modelo ya está en AR
+        modelViewer.addEventListener('ar-status', (event) => {
+            if(event.detail.status === 'session-started'){
+                console.log("El usuario está en AR. El modelo ahora se anclará al suelo detectado.");
+            }
+        });
+    </script>
 </body>
 </html>
-
-
