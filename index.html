@@ -3,95 +3,86 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Virtualizar AR Pro</title>
+    <title>Prueba de Modelos - Virtualizar</title>
     <script type="module" src="https://ajax.googleapis.com/ajax/libs/model-viewer/3.4.0/model-viewer.min.js"></script>
 
     <style>
-        body { margin: 0; background-color: #050505; color: white; font-family: 'Arial', sans-serif; }
+        body { margin: 0; font-family: sans-serif; background-color: #1a1a1a; color: white; }
         
-        /* Header con Logo de Virtualizar */
-        header {
-            padding: 15px;
-            text-align: center;
-            background: linear-gradient(180deg, rgba(0,0,0,0.8) 0%, rgba(0,0,0,0) 100%);
-            position: fixed;
-            width: 100%;
-            z-index: 10;
-        }
-        .logo { font-size: 1.2rem; font-weight: bold; color: #00d4ff; border: 2px solid #00d4ff; padding: 5px 15px; display: inline-block; }
-
-        model-viewer {
-            width: 100vw;
-            height: 100vh;
-            --ar-button-display: none; /* Escondemos el botón default para usar el nuestro */
-        }
-
-        /* Botón de Iniciar y Estancar */
-        .controls {
-            position: absolute;
-            bottom: 30px;
-            width: 100%;
+        /* Contenedor de botones de prueba */
+        .selector-menu {
             display: flex;
             justify-content: center;
             gap: 10px;
-            z-index: 20;
+            padding: 20px;
+            background: #000;
         }
 
-        .btn-ar {
-            background: #00d4ff;
-            color: black;
-            border: none;
-            padding: 15px 25px;
-            border-radius: 50px;
-            font-weight: bold;
+        button {
+            padding: 10px 15px;
+            border: 2px solid #00d4ff;
+            background: transparent;
+            color: #00d4ff;
             cursor: pointer;
-            box-shadow: 0 4px 15px rgba(0, 212, 255, 0.4);
+            border-radius: 5px;
+            font-weight: bold;
+        }
+
+        button:hover { background: #00d4ff; color: black; }
+
+        /* Visor 3D */
+        model-viewer {
+            width: 100vw;
+            height: 80vh;
+        }
+
+        #ar-button {
+            background-color: white;
+            border-radius: 4px;
+            border: none;
+            position: absolute;
+            bottom: 20px;
+            left: 50%;
+            transform: translateX(-50%);
+            padding: 15px;
+            color: #4285f4;
+            font-weight: bold;
         }
     </style>
 </head>
 <body>
 
-    <header>
-        <div class="logo">VIRTUALIZAR</div>
-    </header>
+    <div class="selector-menu">
+        <button onclick="switchModel('https://modelviewer.dev/shared-assets/models/Astronaut.glb')">MODELO 1</button>
+        <button onclick="switchModel('https://modelviewer.dev/shared-assets/models/Chair.glb')">MODELO 2</button>
+        <button onclick="switchModel('https://modelviewer.dev/shared-assets/models/NeilArmstrong.glb')">MODELO 3</button>
+    </div>
 
     <model-viewer 
-        id="static-model"
-        src="withered_freddy_by_nickels02_dcy0vp2.glb" 
-        ios-src="Model.usdz"
+        id="visor"
+        src="https://modelviewer.dev/shared-assets/models/Astronaut.glb" 
         ar 
         ar-modes="webxr scene-viewer quick-look" 
-        ar-placement="floor" 
         camera-controls 
-        touch-action="pan-y"
-        shadow-intensity="2"
-        shadow-softness="0.5"
-        exposure="1">
-
-        <div class="controls">
-            <button class="btn-ar" id="start-ar">
-                📍 INICIAR Y ANCLAR MODELO
-            </button>
-        </div>
-
+        ar-placement="floor"
+        shadow-intensity="1">
+        
+        <button slot="ar-button" id="ar-button">
+            ✨ INICIAR EXPERIENCIA AR
+        </button>
     </model-viewer>
 
     <script>
-        const modelViewer = document.querySelector("#static-model");
-        const arButton = document.querySelector("#start-ar");
-
-        arButton.addEventListener('click', () => {
-            // Activa el modo AR manualmente
-            modelViewer.activateAR();
-        });
-
-        // Evento cuando el modelo ya está en AR
-        modelViewer.addEventListener('ar-status', (event) => {
-            if(event.detail.status === 'session-started'){
-                console.log("El usuario está en AR. El modelo ahora se anclará al suelo detectado.");
-            }
-        });
+        function switchModel(url) {
+            const viewer = document.querySelector('#visor');
+            viewer.src = url; // Cambia el modelo principal
+            
+            // Si tuvieras archivos USDZ para iPhone, los cambiarías así:
+            // viewer.iosSrc = url.replace('.glb', '.usdz');
+            
+            console.log("Cambiando a: " + url);
+        }
     </script>
+
 </body>
 </html>
-
