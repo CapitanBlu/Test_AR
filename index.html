@@ -48,22 +48,19 @@
     </header>
 
     <model-viewer 
-        src="Model.glb" 
-        ios-src="Model.usdz"
-        ar 
-        ar-modes="webxr scene-viewer quick-look" 
-        camera-controls 
-        poster="poster.webp" 
-        shadow-intensity="1" 
-        auto-rotate>
-        
-        <button slot="ar-button" id="ar-button">
-            INICIAR AR
-        </button>
-
-    </model-viewer>
+    src="https://modelviewer.dev/shared-assets/models/Astronaut.glb" 
+    ar 
+    ar-modes="webxr scene-viewer quick-look" 
+    camera-controls 
+    style="width: 100%; height: 500px;">
+    
+    <button slot="ar-button" id="ar-button" style="background-color: white; padding: 10px; border-radius: 5px; position: absolute; top: 10px; right: 10px; z-index: 999;">
+      PRUEBA AQUÍ (AR)
+    </button>
+</model-viewer>
 
     <p style="padding: 20px;">Apunta al suelo y mueve el móvil en círculos para detectar la superficie.</p>
 
 </body>
 </html>
+
