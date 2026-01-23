@@ -3,86 +3,126 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Prueba de Modelos - Virtualizar</title>
+    <title>Virtualizar AR - Panel de Control</title>
+    
     <script type="module" src="https://ajax.googleapis.com/ajax/libs/model-viewer/3.4.0/model-viewer.min.js"></script>
 
     <style>
-        body { margin: 0; font-family: sans-serif; background-color: #1a1a1a; color: white; }
-        
-        /* Contenedor de botones de prueba */
-        .selector-menu {
+        :root { --accent: #00d4ff; }
+        body { margin: 0; font-family: 'Segoe UI', sans-serif; background: #000; color: white; overflow: hidden; }
+
+        /* Logo de Virtualizar */
+        header {
+            padding: 15px;
+            background: rgba(0,0,0,0.8);
+            display: flex;
+            justify-content: center;
+            border-bottom: 1px solid var(--accent);
+            position: fixed;
+            width: 100%;
+            z-index: 100;
+        }
+        .logo { font-weight: bold; color: var(--accent); letter-spacing: 2px; border: 1px solid var(--accent); padding: 5px 15px; }
+
+        /* Contenedor del Visor */
+        model-viewer {
+            width: 100vw;
+            height: 100vh;
+            background: radial-gradient(#333, #000);
+            --progress-bar-color: var(--accent);
+        }
+
+        /* Menú de Botones Superior */
+        .controls {
+            position: absolute;
+            top: 80px;
+            width: 100%;
             display: flex;
             justify-content: center;
             gap: 10px;
-            padding: 20px;
-            background: #000;
+            z-index: 100;
         }
 
-        button {
+        .btn-model {
+            background: rgba(255, 255, 255, 0.1);
+            color: white;
+            border: 1px solid var(--accent);
             padding: 10px 15px;
-            border: 2px solid #00d4ff;
-            background: transparent;
-            color: #00d4ff;
-            cursor: pointer;
             border-radius: 5px;
-            font-weight: bold;
+            cursor: pointer;
+            backdrop-filter: blur(5px);
         }
 
-        button:hover { background: #00d4ff; color: black; }
+        .btn-model.active { background: var(--accent); color: black; }
 
-        /* Visor 3D */
-        model-viewer {
-            width: 100vw;
-            height: 80vh;
-        }
-
+        /* Botón de Iniciar AR */
         #ar-button {
-            background-color: white;
-            border-radius: 4px;
+            background-color: var(--accent);
+            color: black;
+            border-radius: 30px;
             border: none;
             position: absolute;
-            bottom: 20px;
+            bottom: 40px;
             left: 50%;
             transform: translateX(-50%);
-            padding: 15px;
-            color: #4285f4;
+            padding: 15px 30px;
             font-weight: bold;
+            font-size: 16px;
+            z-index: 100;
+            box-shadow: 0 4px 20px rgba(0, 212, 255, 0.4);
         }
     </style>
 </head>
 <body>
 
-    <div class="selector-menu">
-        <button onclick="switchModel('https://modelviewer.dev/shared-assets/models/Astronaut.glb')">MODELO 1</button>
-        <button onclick="switchModel('https://modelviewer.dev/shared-assets/models/Chair.glb')">MODELO 2</button>
-        <button onclick="switchModel('https://modelviewer.dev/shared-assets/models/NeilArmstrong.glb')">MODELO 3</button>
+    <header>
+        <div class="logo">VIRTUALIZAR</div>
+    </header>
+
+    <div class="controls">
+        <button class="btn-model active" onclick="switchModel('Model.glb', this)">MODELO 1</button>
+        <button class="btn-model" onclick="switchModel('Model2.glb', this)">MODELO 2</button>
+        <button class="btn-model" onclick="switchModel('Model3.glb', this)">MODELO 3</button>
     </div>
 
     <model-viewer 
         id="visor"
-        src="https://modelviewer.dev/shared-assets/models/Astronaut.glb" 
+        src="Model.glb" 
+        ios-src="modelo1.usdz"
         ar 
         ar-modes="webxr scene-viewer quick-look" 
+        ar-placement="floor" 
         camera-controls 
-        ar-placement="floor"
-        shadow-intensity="1">
+        touch-action="pan-y"
+        shadow-intensity="2" 
+        shadow-softness="0.5"
+        auto-rotate
+        ar-scale="auto" 
+        interaction-prompt="auto">
         
         <button slot="ar-button" id="ar-button">
-            ✨ INICIAR EXPERIENCIA AR
+            🚀 INICIAR EXPERIENCIA AR
         </button>
+
     </model-viewer>
 
     <script>
-        function switchModel(url) {
+        function switchModel(fileName, element) {
             const viewer = document.querySelector('#visor');
-            viewer.src = url; // Cambia el modelo principal
             
-            // Si tuvieras archivos USDZ para iPhone, los cambiarías así:
-            // viewer.iosSrc = url.replace('.glb', '.usdz');
+            // 1. Cambiamos el archivo .glb (Android/Web)
+            viewer.src = fileName;
             
-            console.log("Cambiando a: " + url);
+            // 2. Cambiamos el archivo .usdz automáticamente (iPhone)
+            const usdzName = fileName.replace('.glb', '.usdz');
+            viewer.iosSrc = usdzName;
+
+            // 3. Actualizamos el estilo de los botones
+            document.querySelectorAll('.btn-model').forEach(btn => btn.classList.remove('active'));
+            element.classList.add('active');
+
+            console.log("Cambiando a: " + fileName);
         }
     </script>
-
 </body>
 </html>
