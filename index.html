@@ -3,76 +3,67 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Virtualizar - Experiencia AR</title>
+    <title>Virtualizar AR</title>
     
-    <script type="module" src="https://ajax.googleapis.com/ajax/libs/model-viewer/3.3.0/model-viewer.min.js"></script>
+    <script type="module" src="https://ajax.googleapis.com/ajax/libs/model-viewer/3.4.0/model-viewer.min.js"></script>
 
     <style>
-        body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; margin: 0; background-color: #f4f4f4; }
+        body { margin: 0; font-family: sans-serif; text-align: center; background: #1a1a1a; color: white; }
+        header { padding: 20px; background: #000; display: flex; align-items: center; justify-content: center; gap: 10px; }
+        .logo-text { font-size: 1.5rem; font-weight: bold; letter-spacing: 2px; color: #00d4ff; }
         
-        /* Estilo del Menú / Header */
-        header {
-            display: flex;
-            align-items: center;
-            justify-content: space-between;
-            padding: 15px 30px;
-            background: #ffffff;
-            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
-        }
-
-        .logo { font-weight: bold; font-size: 1.5rem; color: #2563eb; }
-        
-        /* Contenedor del Visor 3D */
         model-viewer {
             width: 100%;
-            height: 80vh;
-            background-color: #eee;
-            --poster-color: transparent;
+            height: 75vh;
+            --progress-bar-color: #00d4ff;
         }
 
-        /* Botón personalizado de Iniciar AR */
+        /* Botón de AR estilizado */
         #ar-button {
-            background-color: #2563eb;
-            border-radius: 8px;
-            border: none;
-            color: white;
-            padding: 12px 24px;
-            font-size: 16px;
-            cursor: pointer;
+            background-image: url('https://modelviewer.dev/assets/ic_view_in_ar_new_googblue_48dp.png');
+            background-repeat: no-repeat;
+            background-size: 20px 20px;
+            background-position: 12px 50%;
+            background-color: #fff;
             position: absolute;
-            bottom: 20px;
             left: 50%;
             transform: translateX(-50%);
-            z-index: 100;
+            white-space: nowrap;
+            bottom: 132px;
+            padding: 0px 16px 0px 40px;
+            font-family: Roboto Regular, Helvetica Neue, sans-serif;
+            font-size: 14px;
+            color:#4285f4;
+            height: 36px;
+            line-height: 36px;
+            border-radius: 18px;
+            border: 1px solid #DADCE0;
         }
-
-        #ar-button:active { background-color: #1d4ed8; }
     </style>
 </head>
 <body>
 
     <header>
-        <div class="logo">VIRTUALIZAR</div>
-        <nav>Menú</nav>
+        <div class="logo-text">VIRTUALIZAR</div>
     </header>
 
     <model-viewer 
         src="Model.glb" 
+        ios-src="Model.usdz"
         ar 
         ar-modes="webxr scene-viewer quick-look" 
         camera-controls 
-        touch-action="pan-y" 
+        poster="poster.webp" 
         shadow-intensity="1" 
-        alt="Un modelo 3D de Virtualizar"
-        xr-environment>
+        auto-rotate>
         
         <button slot="ar-button" id="ar-button">
-            🚀 INICIAR AR
+            INICIAR AR
         </button>
 
-        <div id="ar-prompt">
-            </div>
     </model-viewer>
+
+    <p style="padding: 20px;">Apunta al suelo y mueve el móvil en círculos para detectar la superficie.</p>
 
 </body>
 </html>
