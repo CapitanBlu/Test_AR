@@ -3,36 +3,31 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Virtualizar AR - Panel de Control</title>
-    
+    <title>Virtualizar AR - Interactivo</title>
     <script type="module" src="https://ajax.googleapis.com/ajax/libs/model-viewer/3.4.0/model-viewer.min.js"></script>
 
     <style>
         :root { --accent: #00d4ff; }
-        body { margin: 0; font-family: 'Segoe UI', sans-serif; background: #000; color: white; overflow: hidden; }
+        body { margin: 0; font-family: 'Segoe UI', sans-serif; background: #000; color: white; }
 
-        /* Logo de Virtualizar */
         header {
             padding: 15px;
-            background: rgba(0,0,0,0.8);
-            display: flex;
-            justify-content: center;
+            background: rgba(0,0,0,0.9);
+            text-align: center;
             border-bottom: 1px solid var(--accent);
             position: fixed;
             width: 100%;
             z-index: 100;
         }
-        .logo { font-weight: bold; color: var(--accent); letter-spacing: 2px; border: 1px solid var(--accent); padding: 5px 15px; }
+        .logo { font-weight: bold; color: var(--accent); letter-spacing: 2px; }
 
-        /* Contenedor del Visor */
         model-viewer {
             width: 100vw;
             height: 100vh;
-            background: radial-gradient(#333, #000);
-            --progress-bar-color: var(--accent);
+            background: #1a1a1a;
         }
 
-        /* Menú de Botones Superior */
+        /* Menú de selección */
         .controls {
             position: absolute;
             top: 80px;
@@ -55,7 +50,6 @@
 
         .btn-model.active { background: var(--accent); color: black; }
 
-        /* Botón de Iniciar AR */
         #ar-button {
             background-color: var(--accent);
             color: black;
@@ -67,41 +61,35 @@
             transform: translateX(-50%);
             padding: 15px 30px;
             font-weight: bold;
-            font-size: 16px;
             z-index: 100;
-            box-shadow: 0 4px 20px rgba(0, 212, 255, 0.4);
         }
     </style>
 </head>
 <body>
 
-    <header>
-        <div class="logo">VIRTUALIZAR</div>
-    </header>
+    <header><div class="logo">VIRTUALIZAR</div></header>
 
     <div class="controls">
-        <button class="btn-model active" onclick="switchModel('withered_freddy_by_nickels02_dcy0vp2.glb', this)">MODELO 1</button>
-        <button class="btn-model" onclick="switchModel('plato.glb', this)">MODELO 2</button>
-        <button class="btn-model" onclick="switchModel('Lechuga.glb', this)">MODELO 3</button>
+        <button class="btn-model active" onclick="switchModel('modelo1.glb', this)">MODELO 1</button>
+        <button class="btn-model" onclick="switchModel('modelo2.glb', this)">MODELO 2</button>
+        <button class="btn-model" onclick="switchModel('modelo3.glb', this)">MODELO 3</button>
     </div>
 
     <model-viewer 
         id="visor"
-        src="withered_freddy_by_nickels02_dcy0vp2.glb" 
+        src="modelo1.glb" 
         ios-src="modelo1.usdz"
         ar 
         ar-modes="webxr scene-viewer quick-look" 
-        ar-placement="floor" 
+        ar-placement="floor"
         camera-controls 
-        touch-action="pan-y"
-        shadow-intensity="2" 
-        shadow-softness="0.5"
-        auto-rotate
-        ar-scale="auto" 
-        interaction-prompt="auto">
+        touch-action="none"
+        shadow-intensity="2"
+        ar-scale="auto"
+        xr-environment>
         
         <button slot="ar-button" id="ar-button">
-            🚀 INICIAR EXPERIENCIA AR
+            🚀 ABRIR CÁMARA AR
         </button>
 
     </model-viewer>
@@ -109,23 +97,12 @@
     <script>
         function switchModel(fileName, element) {
             const viewer = document.querySelector('#visor');
-            
-            // 1. Cambiamos el archivo .glb (Android/Web)
             viewer.src = fileName;
-            
-            // 2. Cambiamos el archivo .usdz automáticamente (iPhone)
-            const usdzName = fileName.replace('.glb', '.usdz');
-            viewer.iosSrc = usdzName;
+            viewer.iosSrc = fileName.replace('.glb', '.usdz');
 
-            // 3. Actualizamos el estilo de los botones
             document.querySelectorAll('.btn-model').forEach(btn => btn.classList.remove('active'));
             element.classList.add('active');
-
-            console.log("Cambiando a: " + fileName);
         }
     </script>
 </body>
 </html>
-
-
-
