@@ -2,93 +2,118 @@
 <html lang="es">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>AR con Controles Totales</title>
-    <script type="module" src="https://ajax.googleapis.com/ajax/libs/model-viewer/3.4.0/model-viewer.min.js"></script>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
+    <title>AR Image Tracking</title>
+    
+    <script src="https://aframe.io/releases/1.5.0/aframe.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/mind-ar@1.2.5/dist/mindar-image-aframe.prod.js"></script>
 
     <style>
-        :root { --accent: #00d4ff; }
-        body { margin: 0; font-family: sans-serif; background: #111; color: white; }
+        body { margin: 0; overflow: hidden; font-family: sans-serif; }
         
-        header { padding: 15px; text-align: center; background: #000; border-bottom: 2px solid var(--accent); }
-        .logo { font-weight: bold; color: var(--accent); letter-spacing: 2px; }
+        /* Capa de interfaz sobre la cámara */
+        #ui-layer {
+            position: absolute; top: 0; left: 0; width: 100%; height: 100%;
+            pointer-events: none; /* Permite tocar la escena 3D a través de la UI */
+            z-index: 10;
+        }
+
+        header { 
+            padding: 15px; text-align: center; background: rgba(0,0,0,0.8); 
+            border-bottom: 2px solid #00d4ff; pointer-events: auto;
+        }
+        .logo { font-weight: bold; color: #00d4ff; letter-spacing: 2px; }
 
         .controls {
-            display: flex; justify-content: center; gap: 10px; padding: 20px; flex-wrap: wrap;
+            position: absolute; bottom: 20px; left: 0; width: 100%;
+            display: flex; justify-content: center; gap: 10px; flex-wrap: wrap;
+            pointer-events: auto; /* Habilita clicks en botones */
         }
 
         .btn-model {
-            background: #222; color: var(--accent); border: 1px solid var(--accent);
-            padding: 12px; border-radius: 8px; cursor: pointer; transition: background 0.3s;
+            background: rgba(0,0,0,0.8); color: #00d4ff; border: 1px solid #00d4ff;
+            padding: 12px; border-radius: 8px; cursor: pointer;
         }
-        .btn-model.active { background: var(--accent); color: #000; }
+        .btn-model.active { background: #00d4ff; color: #000; }
 
-        model-viewer {
-            width: 100%; height: 65vh; background-color: #1a1a1a;
+        /* Mensaje de escaneo */
+        #scanning-overlay {
+            position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%);
+            color: white; background: rgba(0,0,0,0.6); padding: 20px; border-radius: 10px;
+            text-align: center; display: block;
         }
-
-        /* Botón AR flotante */
-        #ar-button {
-            background: var(--accent); color: black; border: none;
-            padding: 12px 24px; border-radius: 50px; font-weight: bold;
-            position: absolute; bottom: 20px; left: 50%; transform: translateX(-50%);
-            white-space: nowrap; cursor: pointer; box-shadow: 0 0 10px rgba(0, 212, 255, 0.5);
-        }
-
-        /* Instrucciones visuales (opcional) */
-        .ar-instructions {
-            position: absolute; top: 10px; left: 50%; transform: translateX(-50%);
-            background: rgba(0,0,0,0.6); padding: 5px 10px; border-radius: 10px;
-            font-size: 0.8rem; pointer-events: none; opacity: 0.8;
-        }
+        #scanning-overlay.hidden { display: none; }
     </style>
 </head>
 <body>
 
-    <header><div class="logo">VIRTUALIZAR</div></header>
+    <div id="ui-layer">
+        <header><div class="logo">MODO TARGET</div></header>
+        
+        <div id="scanning-overlay">
+            📷 Apunta a la imagen "targer.jpg"
+        </div>
 
-    <div class="controls">
-        <button class="btn-model active" onclick="switchModel('withered_freddy_by_nickels02_dcy0vp2.glb', this)">FREDDY</button>
-        <button class="btn-model" onclick="switchModel('Lechuga.glb', this)">LECHUGA</button>
-        <button class="btn-model" onclick="switchModel('model.glb', this)">MODELO 3</button>
-        <button class="btn-model" onclick="switchModel('platoNegro.glb', this)">MODELO 4</button>
+        <div class="controls">
+            <button class="btn-model active" onclick="switchModel('withered_freddy_by_nickels02_dcy0vp2.glb', this)">FREDDY</button>
+            <button class="btn-model" onclick="switchModel('Lechuga.glb', this)">LECHUGA</button>
+            <button class="btn-model" onclick="switchModel('model.glb', this)">MODELO 3</button>
+            <button class="btn-model" onclick="switchModel('model.glb', this)">MODELO 3</button>
+        </div>
     </div>
 
-    <model-viewer 
-        id="visor"
-        src="withered_freddy_by_nickels02_dcy0vp2.glb" 
-        ios-src="withered_freddy_by_nickels02_dcy0vp2.usdz"
-        ar
-        ar-modes="webxr scene-viewer quick-look" 
-        camera-controls
-        ar-scale="auto"
-        ar-placement="floor"
-        shadow-intensity="1"
-        shadow-softness="1"
-        interaction-prompt="auto">
-        
-        <div class="ar-instructions">🖐️ 1 dedo: Mover | ✌️ 2 dedos: Escalar/Rotar</div>
+    <a-scene 
+        mindar-image="imageTargetSrc: ./targets.mind; filterMinCF:0.0001; filterBeta: 0.001;" 
+        color-space="sRGB" 
+        renderer="colorManagement: true, physicallyCorrectLights" 
+        vr-mode-ui="enabled: false" 
+        device-orientation-permission-ui="enabled: false">
 
-        <button slot="ar-button" id="ar-button">
-            📦 VER EN TU ESPACIO
-        </button>
-    </model-viewer>
+        <a-assets>
+            </a-assets>
+
+        <a-camera position="0 0 0" look-controls="enabled: false"></a-camera>
+
+        <a-entity mindar-image-target="targetIndex: 0" id="target-entity">
+            
+            <a-entity 
+                id="modelo-3d" 
+                gltf-model="url(withered_freddy_by_nickels02_dcy0vp2.glb)" 
+                rotation="0 0 0" 
+                position="0 0 0" 
+                scale="0.5 0.5 0.5"
+                animation="property: rotation; to: 0 360 0; loop: true; dur: 10000; easing: linear">
+            </a-entity>
+
+        </a-entity>
+    </a-scene>
 
     <script>
+        // Lógica para detectar cuando se encuentra el target
+        const target = document.querySelector('#target-entity');
+        const overlay = document.querySelector('#scanning-overlay');
+
+        target.addEventListener("targetFound", event => {
+            console.log("Target encontrado");
+            overlay.classList.add('hidden'); // Ocultar mensaje
+        });
+
+        target.addEventListener("targetLost", event => {
+            console.log("Target perdido");
+            overlay.classList.remove('hidden'); // Mostrar mensaje
+        });
+
+        // Lógica para cambiar modelo
         function switchModel(fileName, element) {
-            const viewer = document.querySelector('#visor');
-            const cleanName = fileName.trim();
+            const modelEntity = document.querySelector('#modelo-3d');
             
-            viewer.src = cleanName;
-            viewer.iosSrc = cleanName.replace('.glb', '.usdz');
+            // A-Frame usa setAttribute para cambiar propiedades
+            modelEntity.setAttribute('gltf-model', `url(${fileName.trim()})`);
 
-            // Resetear la escala al cambiar de modelo para evitar bugs visuales
-            viewer.scale = '1 1 1'; 
-
+            // Actualizar botones UI
             document.querySelectorAll('.btn-model').forEach(btn => btn.classList.remove('active'));
             element.classList.add('active');
         }
     </script>
 </body>
 </html>
-
