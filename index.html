@@ -13,12 +13,12 @@
         header { padding: 15px; text-align: center; background: #000; border-bottom: 2px solid var(--accent); }
         .logo { font-weight: bold; color: var(--accent); letter-spacing: 2px; }
 
-        /* Botones de selección */
         .controls {
             display: flex;
             justify-content: center;
             gap: 10px;
             padding: 20px;
+            flex-wrap: wrap; /* Para que se adapte en móviles */
         }
 
         .btn-model {
@@ -28,13 +28,16 @@
             padding: 12px;
             border-radius: 8px;
             cursor: pointer;
+            transition: background 0.3s;
         }
 
+        .btn-model:hover { background: #333; }
         .btn-model.active { background: var(--accent); color: #000; }
 
         model-viewer {
             width: 100%;
             height: 60vh;
+            background-color: #1a1a1a; /* Fondo gris oscuro para ver mejor el modelo */
         }
 
         #ar-button {
@@ -46,6 +49,12 @@
             font-weight: bold;
             display: block;
             margin: 20px auto;
+            position: absolute; /* Posicionamiento sobre el visor */
+            bottom: 20px;
+            left: 50%;
+            transform: translateX(-50%);
+            white-space: nowrap;
+            cursor: pointer;
         }
     </style>
 </head>
@@ -54,34 +63,39 @@
     <header><div class="logo">VIRTUALIZAR</div></header>
 
     <div class="controls">
-        <button class="btn-model active" onclick="switchModel('withered_freddy_by_nickels02_dcy0vp2.glb
-', this)">MODELO 1</button>
-        <button class="btn-model" onclick="switchModel('Lechuga.glb', this)">MODELO 2</button>
+        <button class="btn-model active" onclick="switchModel('withered_freddy_by_nickels02_dcy0vp2.glb', this)">FREDDY</button>
+        <button class="btn-model" onclick="switchModel('Lechuga.glb', this)">LECHUGA</button>
         <button class="btn-model" onclick="switchModel('model.glb', this)">MODELO 3</button>
-        <button class="btn-model" onclick="switchModel('platoNegro.glb', this)">MODELO 4</button>
+        <button class="btn-model" onclick="switchModel('platoNegro.glb', this)">PLATO</button>
     </div>
 
     <model-viewer 
         id="visor"
-        src="withered_freddy_by_nickels02_dcy0vp2.glb
-" 
-        ios-src="modelo1.usdz"
+        src="withered_freddy_by_nickels02_dcy0vp2.glb" 
+        ios-src="withered_freddy_by_nickels02_dcy0vp2.usdz"
         ar
-        ar-modes="scene-viewer webxr quick-look" 
+        ar-modes="webxr scene-viewer quick-look" 
         camera-controls
-        ar-placement="floor"
+        ar-scale="auto"
         shadow-intensity="1">
         
         <button slot="ar-button" id="ar-button">
-            📦 VER EN MODO ANCLAJE (GOOGLE)
+            📦 VER EN TU ESPACIO
         </button>
     </model-viewer>
 
     <script>
         function switchModel(fileName, element) {
             const viewer = document.querySelector('#visor');
-            viewer.src = fileName;
-            viewer.iosSrc = fileName.replace('.glb', '.usdz');
+            
+            // Limpiamos espacios en blanco por si acaso con .trim()
+            const cleanName = fileName.trim();
+            
+            viewer.src = cleanName;
+            
+            // IMPORTANTE: Para iPhone (iOS) necesitas el archivo .usdz
+            // Si no tienes el archivo .usdz, el botón AR no funcionará en iPhone.
+            viewer.iosSrc = cleanName.replace('.glb', '.usdz');
 
             document.querySelectorAll('.btn-model').forEach(btn => btn.classList.remove('active'));
             element.classList.add('active');
@@ -89,6 +103,3 @@
     </script>
 </body>
 </html>
-
-
-
